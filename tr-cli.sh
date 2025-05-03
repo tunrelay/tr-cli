@@ -199,115 +199,6 @@ validateApiKey() {
 }
 validateApiKey
 
-# [ "${init}" -eq 0 -a "${config}" -eq 0 ] && showErrorAndQuit "--init or --config argument is required"
-
-# log() {
-#     # Check for minimum 2 arguments
-#     if [ $# -lt 2 ]; then
-#         echo "Usage: ${FUNCNAME[0]} <level> <message>" && return 1
-#     fi
-
-#     local level=$1
-#     shift 1
-#     local message="$*"
-
-#     # Check if both level and message are provided
-#     if [ -z "${level}" ] || [ -z "${message}" ]; then
-#         echo "Usage: log <level> <message>" && return 1
-#     fi
-
-#     local levelVal
-#     case "${level}" in
-#         dbg|DBG|debug  |DEBUG)      levelVal=${logLevelDebug}; level="DBG";;
-#         inf|INF|info   |INFO)       levelVal=${logLevelInfo}; level="INF";;
-#         wrn|WRN|warning|WARNING)    levelVal=${logLevelWarn}; level="WRN";;
-#         err|ERR|error  |ERROR)      levelVal=${logLevelError}; level="ERR";;
-#         *)                          echo "Usage: log <level> <message>" && return 1;;
-#     esac
-
-#     if [ ${levelVal} -ge ${logLevel} ]; then
-#         local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-#         if [ ${levelVal} -eq ${logLevelError} ]; then
-#             printf '[%s] [%s] %s\n' "${timestamp}" "${level}" "${message}" >&2
-#         else
-#             printf '[%s] [%s] %s\n' "${timestamp}" "${level}" "${message}"
-#         fi
-#     fi
-# }
-# log_debug() { log dbg "$*"; }
-# log_info() { log inf "$*"; }
-# log_warn() { log wrn "$*"; }
-# log_error() { log err "$*"; }
-
-# handleError() {
-#     # Check for minimum 2 arguments
-#     if [ $# -lt 3 ]; then
-#         echo "Usage: ${FUNCNAME[0]} <exitCode> <errorMessage> <errorContext>" && return 1
-#     fi
-
-#     local exitCode=$1
-#     local errorMessage=$2
-#     shift 2
-#     local errorContext="$*"
-
-#     log_error "${errorMessage}"
-#     if [ -n "${errorContext}" ]; then
-#         log_error "Context: ${errorContext}"
-#     fi
-
-#     if [ ${logLevel} -eq ${logLevelDebug} ]; then
-#         log_error "Stack trace:"
-#         local frame=0
-#         while caller $frame; do
-#             (( frame++ ))
-#         done
-#     fi
-
-#     # exit "${exitCode}"
-#     return ${exitCode}
-# }
-
-# # trap 'handleError 1 "Unexpected error occurred" "Line: $LINENO"' ERR
-
-# makeApiRequest() {
-#     local method=$1
-#     local endpoint=$2
-#     local data=${3:-}
-#     local response_file
-#     local response_code
-
-#     response_file=$(mktemp -p "${tempDir}" response-XXXXXX.json)
-
-#     local trApiUrl="https://tunrelay.com/api/v1"
-
-#     local curl_opts=(
-#         -sX "${method}"
-#         -w '%{http_code}'
-#         -o "${response_file}"
-#         -H "Authorization: Bearer ${apiKey}"
-#         -H "Content-Type: application/json"
-#         --connect-timeout 10
-#         --max-time 30
-#         --retry 3
-#         --retry-delay 1
-#     )
-
-#     if [[ -n "${data}" ]]; then
-#         curl_opts+=(-d "${data}")
-#     fi
-
-#     response_code=$(curl "${curl_opts[@]}" "${trApiUrl}${endpoint}")
-
-#     case "${response_code}" in
-#         200) cat "${response_file}"; rm "${response_file}"; return 0 ;;
-#         401) handleError 1 "Unauthorized. Please check your API key" ;;
-#         403) handleError 1 "Forbidden. You don't have permission to access this resource" ;;
-#         404) handleError 1 "Resource not found" ;;
-#         500) handleError 1 "Server error occurred" ;;
-#         *) handleError 1 "Unexpected response code: ${response_code}" ;;
-#     esac
-# }
-
 # TODO: check if curl and jq exist
 
 # check if wireguard exists
@@ -460,19 +351,6 @@ config() {
         return
     }
     networkStatus=$(echo "${networkInfo}" | jq -r '.status')
-
-    # if [ "${networkStatus}" != "running" ]; then
-    #     # if [ ${netStart} -ne 0 ]; then
-    #     #     reqOutput=$(trApiRequest post /network/${netUuid}/start)
-    #     #     [ $? -ne 0 ] && {
-    #     #         echo ERROR 0x000008
-    #     #         return
-    #     #     }
-    #     # else
-    #         echo ERROR 0x000008
-    #         return
-    #     # fi
-    # fi
 
     deviceConfigJson=$(trApiRequest get /config/${netUuid}/${thisDeviceClientUuid}/json)
     [ $? -ne 0 ] && {
