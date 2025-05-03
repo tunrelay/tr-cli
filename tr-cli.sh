@@ -361,13 +361,16 @@ init() {
 
     [ ${shouldCreateClient} -ne 0 ] && {
         echo "Creating client for this device."
-        trApiRequest post /client "{\"name\":\"$(hostname)\",\"public_key\":\"${trWgPublicKey}\"}"
+        if [ -n "${deviceName}" ]; then
+            trApiRequest post /client "{\"name\":\"${deviceName}\",\"public_key\":\"${trWgPublicKey}\"}"
+        else
+            trApiRequest post /client "{\"name\":\"$(hostname)\",\"public_key\":\"${trWgPublicKey}\"}"
+        fi
         [ $? -ne 0 ] && {
             echo ERROR 0x000003
             return
         }
     }
-
 }
 [ ${init} -eq 1 ] && { init; exit; }
 
